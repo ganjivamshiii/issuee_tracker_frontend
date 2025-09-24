@@ -1,0 +1,242 @@
+<!-- Add Create Issue Button -->
+<div class="header-actions">
+  <button 
+    (click)="openCreateModal()"
+    class="btn btn-primary btn-create">
+    + Create New Issue
+  </button>
+</div>
+
+<!-- Modal Overlay -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Create New Issue</h3>
+      <button 
+        type="button" 
+        class="btn-close" 
+        (click)="closeCreateModal()"
+        aria-label="Close">
+        ×
+      </button>
+    </div>
+    
+    <form (ngSubmit)="createIssue()" #issueForm="ngForm">
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="title">Title *</label>
+          <input 
+            id="title"
+            type="text"
+            placeholder="Enter issue title" 
+            [(ngModel)]="newIssue.title" 
+            name="title"
+            required
+            #title="ngModel"
+            class="form-control" />
+          <div *ngIf="title.invalid && title.touched" class="error-message">
+            Title is required
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+            id="description"
+            placeholder="Enter issue description" 
+            [(ngModel)]="newIssue.description"
+            name="description"
+            rows="4"
+            class="form-control"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" [(ngModel)]="newIssue.status" name="status" class="form-control">
+              <option value="open">Open</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="priority">Priority</label>
+            <select id="priority" [(ngModel)]="newIssue.priority" name="priority" class="form-control">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="assignee">Assignee</label>
+          <input 
+            id="assignee"
+            type="text"
+            placeholder="Enter assignee name" 
+            [(ngModel)]="newIssue.assignee"
+            name="assignee"
+            class="form-control" />
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button 
+          type="button" 
+          (click)="closeCreateModal()"
+          class="btn btn-secondary">
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          [disabled]="issueForm.invalid"
+          class="btn btn-primary">
+          Create Issue
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Search & Filters Section -->
+<div class="filters-container">
+  <h4>Search & Filters</h4>
+  <div class="filters-row">
+    <input 
+      placeholder="Search by title or description..." 
+      [(ngModel)]="searchText" 
+      (input)="onSearch()"
+      class="search-input" />
+    
+    <select [(ngModel)]="statusFilter" (change)="onFilterChange()" class="filter-select">
+      <option value="">All Status</option>
+      <option value="open">Open</option>
+      <option value="closed">Closed</option>
+    </select>
+    
+    <select [(ngModel)]="priorityFilter" (change)="onFilterChange()" class="filter-select">
+      <option value="">All Priority</option>
+      <option value="low">Low</option>
+      <option value="medium">Medium</option>
+      <option value="high">High</option>
+    </select>
+    
+    <input 
+      placeholder="Filter by assignee..." 
+      [(ngModel)]="assigneeFilter" 
+      (input)="onFilterChange()"
+      class="filter-input" />
+  </div>
+</div>
+
+<!-- Issues Table -->
+<div class="table-container">
+  <table class="issues-table">
+    <thead>
+      <tr>
+        <th (click)="onSort('id')" class="sortable-header">
+          ID
+          <span class="sort-indicator" *ngIf="sortColumn === 'id'">
+            {{ sortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
+        </th>
+        <th (click)="onSort('title')" class="sortable-header">
+          Title
+          <span class="sort-indicator" *ngIf="sortColumn === 'title'">
+            {{ sortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
+        </th>
+        <th (click)="onSort('status')" class="sortable-header">
+          Status
+          <span class="sort-indicator" *ngIf="sortColumn === 'status'">
+            {{ sortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
+        </th>
+        <th (click)="onSort('priority')" class="sortable-header">
+          Priority
+          <span class="sort-indicator" *ngIf="sortColumn === 'priority'">
+            {{ sortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
+        </th>
+        <th (click)="onSort('assignee')" class="sortable-header">
+          Assignee
+          <span class="sort-indicator" *ngIf="sortColumn === 'assignee'">
+            {{ sortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
+        </th>
+        <th (click)="onSort('updatedAt')" class="sortable-header">
+          Updated At
+          <span class="sort-indicator" *ngIf="sortColumn === 'updatedAt'">
+            {{ sortDirection === 'asc' ? '↑' : '↓' }}
+          </span>
+        </th>
+        <th class="actions-header">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let issue of issues" class="issue-row">
+        <td (click)="viewIssue(issue.id)" class="clickable-cell">{{ issue.id }}</td>
+        <td (click)="viewIssue(issue.id)" class="clickable-cell">{{ issue.title }}</td>
+        <td (click)="viewIssue(issue.id)" class="clickable-cell">
+          <span class="status-badge" [class]="'status-' + issue.status">
+            {{ issue.status }}
+          </span>
+        </td>
+        <td (click)="viewIssue(issue.id)" class="clickable-cell">
+          <span class="priority-badge" [class]="'priority-' + issue.priority">
+            {{ issue.priority }}
+          </span>
+        </td>
+        <td (click)="viewIssue(issue.id)" class="clickable-cell">{{ issue.assignee }}</td>
+        <td (click)="viewIssue(issue.id)" class="clickable-cell">{{ issue.updatedAt | date:'short' }}</td>
+        <td class="actions-cell">
+          <button 
+            (click)="editIssue(issue); $event.stopPropagation()"
+            class="btn btn-edit"
+            title="Edit Issue">
+            Edit
+          </button>
+          <button 
+            (click)="deleteIssue(issue); $event.stopPropagation()"
+            class="btn btn-delete"
+            title="Delete Issue">
+            Delete
+          </button>
+           <button 
+  (click)="viewIssue(issue.id); $event.stopPropagation()"
+  class="btn btn-details"
+  title="View Details">
+  Details
+</button>
+        </td>
+      </tr>
+      <tr *ngIf="issues.length === 0">
+        <td colspan="7" class="no-data">No issues found</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+<div class="pagination-container">
+  <div class="pagination-info">
+   Showing {{ ((page-1) * pageSize) + 1 }} to {{ getMin(page * pageSize, total) }} of {{ total }} issues
+  </div>
+  <div class="pagination-controls">
+    <button 
+      [disabled]="page === 1" 
+      (click)="onPageChange(page-1)"
+      class="btn btn-pagination">
+      « Previous
+    </button>
+    <span class="page-info">Page {{ page }}</span>
+    <button 
+      [disabled]="page * pageSize >= total" 
+      (click)="onPageChange(page+1)"
+      class="btn btn-pagination">
+      Next »
+    </button>
+    
+  </div>
+</div>
